@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Entorno
+.env
+backend/.env
+*.local
+
+# Node / Frontend
+node_modules/
+frontend/dist/
+frontend/.vite/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Datos / logs
+*.log
+*.sqlite3
+pgdata/
+
+# Volcados de BD (datos sensibles: no subir)
+*.dump
+*.sql
+
+# Cachés descargables de los datasets de seed (no hace falta versionarlos)
+backend/scripts/_gifs.json
+backend/scripts/_fe.json

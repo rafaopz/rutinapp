@@ -1,0 +1,143 @@
+
+<h2 class="sr-only">Rutina de entrenamiento de 5 días con prioridad en piernas</h2>
+
+<style>
+.day-tab { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: var(--border-radius-md); cursor: pointer; font-size: 13px; font-weight: 500; color: var(--color-text-secondary); background: transparent; border: 0.5px solid var(--color-border-tertiary); transition: all 0.15s; margin: 0 4px 8px 0; }
+.day-tab.active { background: var(--color-background-info); color: var(--color-text-info); border-color: var(--color-border-info); }
+.day-tab:hover:not(.active) { background: var(--color-background-secondary); }
+.day-content { display: none; }
+.day-content.active { display: block; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
+th { text-align: left; font-weight: 500; font-size: 12px; color: var(--color-text-secondary); padding: 8px 8px; border-bottom: 0.5px solid var(--color-border-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+td { padding: 10px 8px; border-bottom: 0.5px solid var(--color-border-tertiary); color: var(--color-text-primary); vertical-align: top; }
+.col-ex { width: 38%; }
+.col-sr { width: 18%; }
+.col-rir { width: 18%; }
+.col-rest { width: 26%; }
+.muscle { display: inline-block; font-size: 11px; color: var(--color-text-secondary); margin-top: 2px; }
+.day-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+.day-title { font-size: 16px; font-weight: 500; color: var(--color-text-primary); }
+.day-focus { font-size: 12px; padding: 3px 10px; border-radius: var(--border-radius-md); }
+.focus-lower { background: #EEEDFE; color: #3C3489; }
+.focus-upper { background: #E1F5EE; color: #085041; }
+@media (prefers-color-scheme: dark) {
+  .focus-lower { background: #3C3489; color: #CECBF6; }
+  .focus-upper { background: #085041; color: #9FE1CB; }
+}
+.section-label { font-size: 11px; font-weight: 500; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.8px; padding: 12px 8px 4px; }
+</style>
+
+<div style="padding: 0.5rem 0;">
+
+<div style="display: flex; flex-wrap: wrap; margin-bottom: 16px;">
+  <button class="day-tab active" onclick="showDay(0)"><i class="ti ti-calendar" style="font-size:14px" aria-hidden="true"></i> Día 1</button>
+  <button class="day-tab" onclick="showDay(1)"><i class="ti ti-calendar" style="font-size:14px" aria-hidden="true"></i> Día 2</button>
+  <button class="day-tab" onclick="showDay(2)"><i class="ti ti-calendar" style="font-size:14px" aria-hidden="true"></i> Día 3</button>
+  <button class="day-tab" onclick="showDay(3)"><i class="ti ti-calendar" style="font-size:14px" aria-hidden="true"></i> Día 4</button>
+  <button class="day-tab" onclick="showDay(4)"><i class="ti ti-calendar" style="font-size:14px" aria-hidden="true"></i> Día 5</button>
+</div>
+
+<!-- DAY 1 -->
+<div class="day-content active" id="day-0">
+  <div class="day-header">
+    <span class="day-title">Lunes — Lower A</span>
+    <span class="day-focus focus-lower">Cuádriceps</span>
+  </div>
+  <table>
+    <thead><tr><th class="col-ex">Ejercicio</th><th class="col-sr">Series × Reps</th><th class="col-rir">Esfuerzo</th><th class="col-rest">Descanso</th></tr></thead>
+    <tbody>
+      <tr><td>Sentadilla goblet (con mancuerna)<br><span class="muscle">Cuádriceps / glúteo</span></td><td>4 × 8-10</td><td>RIR 2-3</td><td>2-3 min</td></tr>
+      <tr><td>Prensa de piernas<br><span class="muscle">Cuádriceps</span></td><td>3 × 10-12</td><td>RIR 2</td><td>2 min</td></tr>
+      <tr><td>Extensión de cuádriceps (máquina)<br><span class="muscle">Cuádriceps — aislamiento</span></td><td>3 × 12-15</td><td>RIR 1</td><td>90 seg</td></tr>
+      <tr><td>Peso muerto rumano con mancuernas<br><span class="muscle">Isquiotibiales / glúteo</span></td><td>3 × 10-12</td><td>RIR 2</td><td>2 min</td></tr>
+      <tr><td>Elevación de talones de pie (máquina)<br><span class="muscle">Gemelos</span></td><td>3 × 12-15</td><td>RIR 1</td><td>60 seg</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- DAY 2 -->
+<div class="day-content" id="day-1">
+  <div class="day-header">
+    <span class="day-title">Martes — Upper A</span>
+    <span class="day-focus focus-upper">Push + Pull</span>
+  </div>
+  <table>
+    <thead><tr><th class="col-ex">Ejercicio</th><th class="col-sr">Series × Reps</th><th class="col-rir">Esfuerzo</th><th class="col-rest">Descanso</th></tr></thead>
+    <tbody>
+      <tr><td>Press de banca con mancuernas<br><span class="muscle">Pecho</span></td><td>3 × 8-10</td><td>RIR 2-3</td><td>2-3 min</td></tr>
+      <tr><td>Remo con mancuerna a 1 brazo<br><span class="muscle">Dorsal / trapecio</span></td><td>3 × 10-12</td><td>RIR 2</td><td>90 seg (por lado)</td></tr>
+      <tr><td>Press de hombro con mancuernas (sentada)<br><span class="muscle">Deltoides anterior/medio</span></td><td>3 × 10-12</td><td>RIR 2</td><td>2 min</td></tr>
+      <tr><td>Jalón al pecho (máquina/polea)<br><span class="muscle">Dorsal</span></td><td>3 × 10-12</td><td>RIR 2</td><td>90 seg</td></tr>
+      <tr><td>Curl de bíceps con mancuernas<br><span class="muscle">Bíceps</span></td><td>2 × 12-15</td><td>RIR 1</td><td>60 seg</td></tr>
+      <tr><td>Extensión de tríceps en polea<br><span class="muscle">Tríceps</span></td><td>2 × 12-15</td><td>RIR 1</td><td>60 seg</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- DAY 3 -->
+<div class="day-content" id="day-2">
+  <div class="day-header">
+    <span class="day-title">Jueves — Lower B</span>
+    <span class="day-focus focus-lower">Glúteo / isquiotibiales</span>
+  </div>
+  <table>
+    <thead><tr><th class="col-ex">Ejercicio</th><th class="col-sr">Series × Reps</th><th class="col-rir">Esfuerzo</th><th class="col-rest">Descanso</th></tr></thead>
+    <tbody>
+      <tr><td>Hip thrust con barra<br><span class="muscle">Glúteo mayor</span></td><td>4 × 8-10</td><td>RIR 2</td><td>2-3 min</td></tr>
+      <tr><td>Sentadilla búlgara con mancuernas<br><span class="muscle">Glúteo / cuádriceps</span></td><td>3 × 10-12</td><td>RIR 2</td><td>90 seg (por pierna)</td></tr>
+      <tr><td>Curl femoral acostada (máquina)<br><span class="muscle">Isquiotibiales — aislamiento</span></td><td>3 × 10-12</td><td>RIR 1-2</td><td>90 seg</td></tr>
+      <tr><td>Abducción de cadera (máquina)<br><span class="muscle">Glúteo medio</span></td><td>3 × 12-15</td><td>RIR 1</td><td>60 seg</td></tr>
+      <tr><td>Elevación de talones sentada<br><span class="muscle">Sóleo</span></td><td>3 × 15-20</td><td>RIR 1</td><td>60 seg</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- DAY 4 -->
+<div class="day-content" id="day-3">
+  <div class="day-header">
+    <span class="day-title">Viernes — Upper B</span>
+    <span class="day-focus focus-upper">Pull + Push</span>
+  </div>
+  <table>
+    <thead><tr><th class="col-ex">Ejercicio</th><th class="col-sr">Series × Reps</th><th class="col-rir">Esfuerzo</th><th class="col-rest">Descanso</th></tr></thead>
+    <tbody>
+      <tr><td>Remo en máquina o polea baja<br><span class="muscle">Dorsal / romboides</span></td><td>3 × 10-12</td><td>RIR 2</td><td>2 min</td></tr>
+      <tr><td>Press inclinado con mancuernas<br><span class="muscle">Pecho superior</span></td><td>3 × 10-12</td><td>RIR 2</td><td>2 min</td></tr>
+      <tr><td>Face pull en polea<br><span class="muscle">Deltoides posterior / rotadores</span></td><td>3 × 15-20</td><td>RIR 1</td><td>60 seg</td></tr>
+      <tr><td>Elevaciones laterales con mancuernas<br><span class="muscle">Deltoides lateral</span></td><td>3 × 12-15</td><td>RIR 1</td><td>60 seg</td></tr>
+      <tr><td>Curl martillo con mancuernas<br><span class="muscle">Bíceps / braquial</span></td><td>2 × 12-15</td><td>RIR 1</td><td>60 seg</td></tr>
+      <tr><td>Fondos en máquina asistida o press francés<br><span class="muscle">Tríceps</span></td><td>2 × 10-12</td><td>RIR 1-2</td><td>60 seg</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- DAY 5 -->
+<div class="day-content" id="day-4">
+  <div class="day-header">
+    <span class="day-title">Sábado — Legs C</span>
+    <span class="day-focus focus-lower">Volumen completo</span>
+  </div>
+  <table>
+    <thead><tr><th class="col-ex">Ejercicio</th><th class="col-sr">Series × Reps</th><th class="col-rir">Esfuerzo</th><th class="col-rest">Descanso</th></tr></thead>
+    <tbody>
+      <tr><td>Sentadilla en máquina Smith o hack squat<br><span class="muscle">Cuádriceps / glúteo</span></td><td>3 × 10-12</td><td>RIR 2</td><td>2-3 min</td></tr>
+      <tr><td>Hip thrust en máquina o con barra<br><span class="muscle">Glúteo mayor</span></td><td>3 × 10-12</td><td>RIR 2</td><td>2 min</td></tr>
+      <tr><td>Zancadas caminando con mancuernas<br><span class="muscle">Cuádriceps / glúteo</span></td><td>3 × 10-12 (por pierna)</td><td>RIR 2</td><td>90 seg</td></tr>
+      <tr><td>Curl femoral sentada (máquina)<br><span class="muscle">Isquiotibiales</span></td><td>3 × 12-15</td><td>RIR 1</td><td>90 seg</td></tr>
+      <tr><td>Elevación de talones de pie<br><span class="muscle">Gemelos</span></td><td>3 × 12-15</td><td>RIR 1</td><td>60 seg</td></tr>
+    </tbody>
+  </table>
+</div>
+
+</div>
+
+<script>
+function showDay(i) {
+  document.querySelectorAll('.day-content').forEach((el, idx) => {
+    el.classList.toggle('active', idx === i);
+  });
+  document.querySelectorAll('.day-tab').forEach((el, idx) => {
+    el.classList.toggle('active', idx === i);
+  });
+}
+</script>

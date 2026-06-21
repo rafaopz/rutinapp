@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+**/__pycache__/
+*.pyc
+.env
+.pytest_cache/
+# Cachés de los datasets de seed (se descargan bajo demanda; no van en la imagen)
+scripts/_gifs.json
+scripts/_fe.json
+scripts/_exercise_names_en.json

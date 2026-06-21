@@ -1,0 +1,12 @@
+# Configuración de pnpm (pnpm 11 lee los "settings" desde aquí).
+
+# Lista blanca de dependencias autorizadas a ejecutar scripts de build/postinstall.
+# pnpm bloquea esos scripts por defecto (principal vector de los ataques a la
+# cadena de suministro de npm); aquí solo se autorizan los imprescindibles.
+onlyBuiltDependencies:
+  - esbuild
+  - "@tailwindcss/oxide"
+
+# "Cooldown": no instalar versiones publicadas hace menos de 1440 min (24 h),
+# para dar tiempo a detectar publicaciones maliciosas.
+minimumReleaseAge: 1440

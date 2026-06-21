@@ -1,0 +1,7 @@
+Migraciones de base de datos gestionadas con Alembic.
+
+Comandos útiles (desde backend/, con el venv activo):
+  alembic revision --autogenerate -m "mensaje"   # generar migración
+  alembic upgrade head                            # aplicar
+  alembic downgrade -1                            # revertir una
+  alembic history                                 # ver historial
