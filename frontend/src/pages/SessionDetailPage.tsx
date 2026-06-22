@@ -1,10 +1,11 @@
 // Detalle de una sesión: totales, división muscular y series por ejercicio.
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { createPortal } from "react-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 import { AppLayout } from "../components/AppLayout";
 import { ExerciseThumb } from "../components/ExerciseGuide";
-import { Alert, Spinner } from "../components/ui";
+import { Alert, Icon, Spinner } from "../components/ui";
 import { ApiError, workoutsApi } from "../lib/api";
 import type { SetLog, WorkoutSession } from "../lib/types";
 
@@ -53,9 +54,12 @@ interface ExerciseGroup {
 
 export function SessionDetailPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const sessionId = Number(id);
   const [session, setSession] = useState<WorkoutSession | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     workoutsApi
@@ -65,6 +69,21 @@ export function SessionDetailPage() {
         setError(e instanceof ApiError ? e.message : "Error al cargar la sesión"),
       );
   }, [sessionId]);
+
+  async function handleDelete() {
+    setDeleting(true);
+    setError(null);
+    try {
+      await workoutsApi.remove(sessionId);
+      navigate("/calendar", { replace: true });
+    } catch (e) {
+      setError(
+        e instanceof ApiError ? e.message : "No se pudo eliminar el entrenamiento",
+      );
+      setDeleting(false);
+      setConfirmDelete(false);
+    }
+  }
 
   // Series efectivas (sin calentamiento) para totales y división.
   const working = useMemo(
@@ -220,6 +239,57 @@ export function SessionDetailPage() {
           </div>
         ))}
       </section>
+
+      {/* Eliminar entrenamiento */}
+      <div className="mt-lg">
+        <button
+          type="button"
+          onClick={() => setConfirmDelete(true)}
+          className="flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-error/40
+            text-body-md text-error transition-colors hover:bg-error/10 active:scale-[0.99]"
+        >
+          <Icon name="delete" />
+          Eliminar entrenamiento
+        </button>
+      </div>
+
+      {/* Confirmación de eliminación */}
+      {confirmDelete &&
+        createPortal(
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-container-margin backdrop-blur-sm">
+            <div className="w-full max-w-[24rem] rounded-2xl border border-surface-container-high bg-surface-container p-lg shadow-2xl">
+              <div className="mb-md flex flex-col items-center gap-sm text-center">
+                <Icon name="delete" className="!text-[40px] text-error" />
+                <h3 className="text-headline-lg-mobile text-on-surface">
+                  ¿Eliminar entrenamiento?
+                </h3>
+                <p className="text-body-md text-on-surface-variant">
+                  Se borrarán todas sus series de forma permanente. Esta acción no
+                  se puede deshacer.
+                </p>
+              </div>
+              <div className="flex gap-sm">
+                <button
+                  type="button"
+                  onClick={() => setConfirmDelete(false)}
+                  disabled={deleting}
+                  className="h-12 flex-1 rounded-xl bg-surface-container-high text-body-md text-on-surface active:scale-[0.99] disabled:opacity-50"
+                >
+                  Volver
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="h-12 flex-1 rounded-xl bg-error text-body-md text-on-error active:scale-[0.99] disabled:opacity-50"
+                >
+                  {deleting ? "Eliminando…" : "Sí, eliminar"}
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body,
+        )}
     </AppLayout>
   );
 }

@@ -37,14 +37,7 @@ function TopAppBar({
         <h1 className="mx-4 flex-1 truncate text-center text-headline-md text-primary">
           {title}
         </h1>
-        <button
-          aria-label="Perfil"
-          onClick={() => navigate("/profile")}
-          className="flex h-touch-target-min w-touch-target-min items-center justify-center rounded-full
-            text-primary transition-transform duration-200 hover:bg-surface-bright/20 active:scale-95"
-        >
-          <Icon name="settings" />
-        </button>
+        <div className="h-touch-target-min w-touch-target-min" />
       </div>
     </header>
   );

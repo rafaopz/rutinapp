@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 
 import { AppLayout } from "../components/AppLayout";
@@ -18,18 +19,6 @@ interface DraftSet extends SetLogCreatePayload {
   exerciseName: string;
 }
 
-function useElapsed(active: boolean) {
-  const [seconds, setSeconds] = useState(0);
-  useEffect(() => {
-    if (!active) return;
-    const id = setInterval(() => setSeconds((s) => s + 1), 1000);
-    return () => clearInterval(id);
-  }, [active]);
-  const mm = String(Math.floor(seconds / 60)).padStart(2, "0");
-  const ss = String(seconds % 60).padStart(2, "0");
-  return { seconds, label: `${mm}:${ss}` };
-}
-
 // mm:ss a partir de segundos
 function fmt(total: number): string {
   const mm = String(Math.floor(total / 60)).padStart(2, "0");
@@ -38,26 +27,121 @@ function fmt(total: number): string {
 }
 
 const REST_DEFAULT = 90; // segundos de descanso por defecto
+const REST_PRESETS = [30, 60, 90, 120, 180]; // opciones de descanso (s)
+const DRAFT_KEY = "rutinapp:workout-draft"; // entrenamiento en curso (persistido)
+const INACTIVITY_MS = 60 * 60 * 1000; // 1 h sin novedad → se descarta
+
+// Borrador del entrenamiento en curso, guardado en localStorage para que
+// sobreviva al cambiar de vista. Caduca tras 1 h sin actividad.
+interface WorkoutDraft {
+  draftSets: DraftSet[];
+  selectedDayId: number | null;
+  startedAt: number;
+  lastActivityAt: number;
+  restDefault: number;
+  restEndsAt: number | null;
+}
+
+function loadDraft(): WorkoutDraft | null {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if (!raw) return null;
+    const d = JSON.parse(raw) as WorkoutDraft;
+    if (!d.draftSets?.length || Date.now() - d.lastActivityAt >= INACTIVITY_MS) {
+      localStorage.removeItem(DRAFT_KEY);
+      return null;
+    }
+    return d;
+  } catch {
+    localStorage.removeItem(DRAFT_KEY);
+    return null;
+  }
+}
 
 export function WorkoutPage() {
   const navigate = useNavigate();
+  // Restaura un entrenamiento en curso si lo había (una sola vez).
+  const [draft0] = useState(loadDraft);
   const [routine, setRoutine] = useState<Routine | null>(null);
   const [noActive, setNoActive] = useState(false);
   const [exercises, setExercises] = useState<Exercise[]>([]);
-  const [selectedDayId, setSelectedDayId] = useState<number | null>(null);
-  const [draftSets, setDraftSets] = useState<DraftSet[]>([]);
+  const [selectedDayId, setSelectedDayId] = useState<number | null>(
+    draft0?.selectedDayId ?? null,
+  );
+  const [draftSets, setDraftSets] = useState<DraftSet[]>(
+    draft0?.draftSets ?? [],
+  );
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [rest, setRest] = useState(0); // segundos restantes de descanso
-  const { seconds: elapsed, label: timer } = useElapsed(draftSets.length > 0);
+  const [startedAt, setStartedAt] = useState<number | null>(
+    draft0?.startedAt ?? null,
+  );
+  const [lastActivityAt, setLastActivityAt] = useState<number>(
+    draft0?.lastActivityAt ?? Date.now(),
+  );
+  const [restEndsAt, setRestEndsAt] = useState<number | null>(
+    draft0?.restEndsAt ?? null,
+  );
+  const [restDefault, setRestDefault] = useState(
+    draft0?.restDefault ?? REST_DEFAULT,
+  ); // descanso por serie
+  const [confirmCancel, setConfirmCancel] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
 
-  // Cuenta atrás del descanso entre series.
+  const started = draftSets.length > 0;
+
+  // Reloj central: solo corre si hay entrenamiento activo o descanso en marcha.
   useEffect(() => {
-    if (rest <= 0) return;
-    const id = setInterval(() => setRest((r) => Math.max(0, r - 1)), 1000);
+    if (startedAt == null && restEndsAt == null) return;
+    const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
-  }, [rest > 0]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [startedAt, restEndsAt]);
+
+  const elapsed = startedAt ? Math.max(0, Math.floor((now - startedAt) / 1000)) : 0;
+  const timer = fmt(elapsed);
+  const rest = restEndsAt ? Math.max(0, Math.round((restEndsAt - now) / 1000)) : 0;
+
+  // Limpia el descanso cuando se agota.
+  useEffect(() => {
+    if (restEndsAt != null && now >= restEndsAt) setRestEndsAt(null);
+  }, [now, restEndsAt]);
+
+  // Persiste el borrador en cada cambio relevante (o lo borra si no hay nada).
+  useEffect(() => {
+    if (!started || startedAt == null) {
+      localStorage.removeItem(DRAFT_KEY);
+      return;
+    }
+    const draft: WorkoutDraft = {
+      draftSets,
+      selectedDayId,
+      startedAt,
+      lastActivityAt,
+      restDefault,
+      restEndsAt,
+    };
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+  }, [
+    started,
+    draftSets,
+    selectedDayId,
+    startedAt,
+    lastActivityAt,
+    restDefault,
+    restEndsAt,
+  ]);
+
+  // Auto-descarta el entrenamiento tras 1 h sin novedad.
+  useEffect(() => {
+    if (!started) return;
+    if (now - lastActivityAt >= INACTIVITY_MS) {
+      setDraftSets([]);
+      setStartedAt(null);
+      setRestEndsAt(null);
+      setError("El entrenamiento se cerró tras 1 hora sin actividad.");
+    }
+  }, [now, started, lastActivityAt]);
 
   useEffect(() => {
     (async () => {
@@ -70,7 +154,9 @@ export function WorkoutPage() {
         }
         const full = await routinesApi.get(active.id);
         setRoutine(full);
-        if (full.days.length > 0) setSelectedDayId(full.days[0].id);
+        // No pisar el día restaurado de un entrenamiento en curso.
+        if (full.days.length > 0)
+          setSelectedDayId((prev) => prev ?? full.days[0].id);
       } catch (e) {
         setError(e instanceof ApiError ? e.message : "Error al cargar");
       }
@@ -101,13 +187,27 @@ export function WorkoutPage() {
   );
 
   function addSet(set: DraftSet) {
+    const ts = Date.now();
     setDraftSets((prev) => [...prev, set]);
     setSaved(false);
-    if (!set.is_warmup) setRest(REST_DEFAULT); // inicia descanso tras serie efectiva
+    setStartedAt((prev) => prev ?? ts); // marca el inicio en la primera serie
+    setLastActivityAt(ts);
+    if (!set.is_warmup) setRestEndsAt(ts + restDefault * 1000); // descanso tras serie efectiva
+  }
+
+  // Cancela el entrenamiento en curso: descarta series y reinicia temporizadores.
+  function cancelWorkout() {
+    setDraftSets([]);
+    setStartedAt(null);
+    setRestEndsAt(null);
+    setSaved(false);
+    setError(null);
+    setConfirmCancel(false);
   }
 
   function removeSet(idx: number) {
     setDraftSets((prev) => prev.filter((_, i) => i !== idx));
+    setLastActivityAt(Date.now());
   }
 
   // Series ya registradas de un ejercicio, con su índice global (para borrar).
@@ -130,7 +230,8 @@ export function WorkoutPage() {
         sets: draftSets.map(({ exerciseName: _n, ...s }) => s),
       });
       setDraftSets([]);
-      setRest(0);
+      setStartedAt(null);
+      setRestEndsAt(null);
       setSaved(true);
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "No se pudo guardar");
@@ -226,6 +327,44 @@ export function WorkoutPage() {
         </div>
       </section>
 
+      {/* Descanso entre series (configurable) */}
+      <section className="mb-lg rounded-xl border border-surface-container-high bg-surface-container-low p-md">
+        <div className="mb-sm flex items-center justify-between">
+          <p className="flex items-center gap-1 text-label-caps text-on-surface-variant">
+            <Icon name="hourglass_top" className="!text-[14px]" />
+            DESCANSO ENTRE SERIES
+          </p>
+          <button
+            type="button"
+            onClick={() => setRestEndsAt(Date.now() + restDefault * 1000)}
+            className="flex items-center gap-1 rounded-lg bg-primary-container/25 px-2 py-1 text-label-caps text-primary active:scale-95"
+          >
+            <Icon name="play_arrow" className="!text-[14px]" fill />
+            INICIAR
+          </button>
+        </div>
+        <div className="no-scrollbar flex gap-sm overflow-x-auto">
+          {REST_PRESETS.map((sec) => {
+            const active = sec === restDefault;
+            return (
+              <button
+                key={sec}
+                type="button"
+                onClick={() => setRestDefault(sec)}
+                className={
+                  "whitespace-nowrap rounded-full px-md py-sm text-label-caps transition-transform active:scale-95 " +
+                  (active
+                    ? "bg-primary text-on-primary shadow-lg shadow-primary/20"
+                    : "bg-surface-container-high text-on-surface-variant")
+                }
+              >
+                {fmt(sec)}
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
       {/* Ejercicios prescritos del día */}
       {selectedDay && selectedDay.exercises.length > 0 && (
         <div className="mb-lg space-y-md">
@@ -262,8 +401,8 @@ export function WorkoutPage() {
         </p>
       )}
 
-      {/* Finalizar */}
-      <div className="mt-lg">
+      {/* Finalizar / Cancelar */}
+      <div className="mt-lg space-y-sm">
         <Button
           onClick={handleSave}
           disabled={busy || draftSets.length === 0}
@@ -272,16 +411,67 @@ export function WorkoutPage() {
           <Icon name="check_circle" fill />
           {busy ? "Guardando…" : "Finalizar entrenamiento"}
         </Button>
+        {started && (
+          <button
+            type="button"
+            onClick={() => setConfirmCancel(true)}
+            disabled={busy}
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-error/40
+              text-body-md text-error transition-colors hover:bg-error/10 active:scale-[0.99] disabled:opacity-50"
+          >
+            <Icon name="cancel" />
+            Cancelar entrenamiento
+          </button>
+        )}
       </div>
 
       {/* Timer de descanso */}
       {rest > 0 && (
         <RestTimer
           rest={rest}
-          onAdjust={(delta) => setRest((r) => Math.max(0, r + delta))}
-          onSkip={() => setRest(0)}
+          onAdjust={(delta) =>
+            setRestEndsAt((end) => (end ?? Date.now()) + delta * 1000)
+          }
+          onSkip={() => setRestEndsAt(null)}
         />
       )}
+
+      {/* Confirmación de cancelar */}
+      {confirmCancel &&
+        createPortal(
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-container-margin backdrop-blur-sm">
+            <div className="w-full max-w-[24rem] rounded-2xl border border-surface-container-high bg-surface-container p-lg shadow-2xl">
+              <div className="mb-md flex flex-col items-center gap-sm text-center">
+                <Icon name="cancel" className="!text-[40px] text-error" />
+                <h3 className="text-headline-lg-mobile text-on-surface">
+                  ¿Cancelar entrenamiento?
+                </h3>
+                <p className="text-body-md text-on-surface-variant">
+                  Se descartarán las {draftSets.length}{" "}
+                  {draftSets.length === 1 ? "serie registrada" : "series registradas"}.
+                  Esta acción no se puede deshacer.
+                </p>
+              </div>
+              <div className="flex gap-sm">
+                <button
+                  type="button"
+                  onClick={() => setConfirmCancel(false)}
+                  className="h-12 flex-1 rounded-xl bg-surface-container-high text-body-md text-on-surface active:scale-[0.99]"
+                >
+                  Volver
+                </button>
+                <button
+                  type="button"
+                  onClick={cancelWorkout}
+                  className="h-12 flex-1 rounded-xl bg-error text-body-md text-on-error active:scale-[0.99]"
+                >
+                  Sí, cancelar
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body,
+        )}
     </AppLayout>
   );
 }
